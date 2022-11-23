@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Tracker</title>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+  .expensesform {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  table #addedexpenselist {
+    display: flex;
+    justify-content: center;
+    max-width: 500px;
+  }
+  button .text-primary {
+    margin: auto 2px auto 8px;
+  }
+  #tableitems{
+    margin-left:auto;
+    margin-right: auto;
+    width: fit-content;
+  }
+  .btn-success{
+    margin-top: 15px;
+  }
+  .expbtns{
+    padding: 1px 5px 1px 5px;
+    margin: 0px 1px 0px 20vw;
+  }
+  .expbtns2{
+    padding: 1px 5px 1px 5px;
+  }
+  </style>
+</head>
+
+<body>
+          <h1><center>Welcome to Expense Tracker Application</center></h1>
+           
+              <form id="my-form" onsubmit="saveToCloudCrudCrud(event)"><center>
+                <label for="addexpenseinput">Expense Amount</label>
+                <input type="text" placeholder="Enter your amount" id="addexpenseinput" required />
+               &#160&#160&#160&#160&#160
+               
+                <label for="description">Expense Description</label>
+                <input type="text" name="description" id="addexpensedescription" placeholder="enter expenses description" required />
+               &#160&#160&#160&#160&#160
+               
+                <label for="category">Expense Category</label>
+                <select id="addexpensecategory" name="category" required>
+                <option></option>
+                <option value="Fuel">Fuel</option>
+                <option value="Movie">Movie</option>
+                <option value="Food">Food</option>
+                <option value="Electricity">Electricity</option>
+                </select>
+           
+              <button type="button submit" class="btn btn-success sm-2 center" id="addexpensebtn" style="display: block;" >
+                Add Expense
+              </button>  
+              <button type="button" class="btn btn-success sm-2 center" id="updateexpensebtn" style="display: none;" >
+                Update Expense
+              </button></center>
+            </form> 
+                 
+            <hr />
+            <div id="tableitems">
+              <table class="table table-striped" id="addedexpenselist">                
+              </table>
+            </div>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.1.3/axios.min.js"></script>
+
+  <script>
+    var url = 'https://crudcrud.com/api/8cd2f96db69046e79afe243da7fab8d8'; 
+
+let addexpenseinput = document.getElementById("addexpenseinput");
+let addexpensedescription=document.getElementById("addexpensedescription");
+let addexpensecategory=document.getElementById("addexpensecategory");
+let addexpensebtn = document.getElementById("addexpensebtn");
+let updateexpensebtn = document.getElementById("updateexpensebtn");
+
+function saveToCloudCrudCrud(event){
+    event.preventDefault();
+    let amount = event.target.addexpenseinput.value;
+    let description = event.target.addexpensedescription.value;
+    let category = event.target.addexpensecategory.value;
+    let obj={amount,description,category};
+    //TO STORE DATA ON CRUD CRUD USING AXIOS
+    axios.post(`${url}/expensedata`, obj)
+        .then((res) => {
+          //console.log(res.data)
+          showexpenses(res.data);
+          amount = "";
+          description = "";
+          category = "";
+        })
+        .catch((err) => {
+          //console.log(err)
+          document.body.innerHTML += `<h4> Server error ${err} , while saving data.  Please try after some time</h4>`;
+        })        
+    }
+    
+
+// DOM ContentLoader on page load
+window.addEventListener("DOMContentLoaded", () => {
+    axios.get(`${url}/expensedata`)
+        .then((res) => {
+            //console.log(res.data)
+          for (var i = 0; i < res.data.length; i++) {
+            showexpenses(res.data[i]);
+          }
+        })
+        .catch((err) => {
+          document.body.innerHTML += `<h4> Server error ${err} , in dom showing data on screen.  Please try after some time</h4>`;
+        })
+    })
+
+
+// showexpenses
+function showexpenses(expenseItem){
+    document.getElementById("addexpenseinput").value="";
+    document.getElementById("addexpensedescription").value="";
+    document.getElementById("addexpensecategory").value="";
+    const addedexpenselist = document.getElementById("addedexpenselist");
+    const html = `<tr id='${expenseItem._id}'>
+                    <td>Rs ${expenseItem.amount}  | ${expenseItem.description} - ${expenseItem.category}</td>
+                    <td><button type="button" onclick=editexpense('${expenseItem._id}','${expenseItem.amount}','${expenseItem.description}','${expenseItem.category}') class="expbtns text-primary">Edit</button></td>
+                    <td><button type="button" onclick=deleteexpense('${expenseItem._id}') class="expbtns2 text-danger">Delete</button></td>
+                </tr>`;    
+    addedexpenselist.innerHTML += html;
+}
+
+// editexpense
+function editexpense(expId,expAmount,expDesc,expCat){
+            
+    addexpenseinput.value = expAmount;
+    addexpensedescription.value=expDesc;
+    addexpensecategory.value=expCat;
+    removeExpenseFromScreen(expId);
+
+    document.querySelector("#addexpensebtn").style.display="none";
+    document.querySelector("#updateexpensebtn").style.display="block";
+    updateexpensebtn.setAttribute("onclick",`updateUser('${expId}')`)
+}
+
+//update in crud crud
+function updateUser(expId){
+    amount = addexpenseinput.value;
+    description = addexpensedescription.value;
+    category = addexpensecategory.value;
+    obj={amount,description,category};
+
+    axios.put(`${url}/expensedata/${expId}`, obj)
+        .then((res) => {
+          amount = "";
+          description = "";
+          category = "";
+    document.querySelector("#addexpensebtn").style.display="block";
+    document.querySelector("#updateexpensebtn").style.display="none";
+    updateexpensebtn.removeAttribute("onclick");
+    axios.get(`${url}/expensedata/${expId}`)
+        .then((res) => { showexpenses(res.data); })
+        .catch((err) => {
+          console.log(err)
+          document.body.innerHTML += `<h4> Server error ${err} , while getting updated data.  Please try after some time</h4>`;
+        })
+    }) 
+    .catch((er) => {
+        //console.log(er)
+        document.body.innerHTML += `<h4> Server error ${er} , while updating.  Please try after some time</h4>`;
+        })
+
+}
+
+
+//remove from screen
+function removeExpenseFromScreen(expId){
+    var remExpense=document.getElementById(expId);
+    if(remExpense){
+        remExpense.parentNode.removeChild(remExpense);
+    }
+}
+
+
+// deleteexpense from crudcrud
+function deleteexpense(expId){
+    axios.delete(`${url}/expensedata/${expId}`)
+        .then((res) => { removeExpenseFromScreen(expId); })
+        .catch((err) => {
+          document.body.innerHTML += `<h4> Server error ${err} , while getting deleting data.  Please try after some time</h4>`;
+        })
+}
+
+
+</script>
+
+</body>
+</html>
